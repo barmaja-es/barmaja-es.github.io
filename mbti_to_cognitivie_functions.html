@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>from MBTI to cognitive functions (alpha)</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+    </head>
+    <body>
+        <h1>MBTI to congnitive functions converter (alpha)</h1>
+        <h2>Step 1: Enter your MBTI type and percentages</h2>
+        <label>character 1: </label><select id="c1" onchange="calculate_result()"><option value="I">I</option><option value="E">E</option></select><input id="c1p" type="range" min="50" max="100" value="100" oninput="this.nextElementSibling.value = this.value; calculate_result()" onchange="calculate_result()"><output>100</output><label>%</label></label><br>
+        <label>character 2: </label><select id="c2" onchange="calculate_result()"><option value="S">S</option><option value="N">N</option></select><input id="c2p" type="range" min="50" max="100" value="100" oninput="this.nextElementSibling.value = this.value; calculate_result()" onchange="calculate_result()"><output>100</output><label>%</label></label><br>
+        <label>character 3: </label><select id="c3" onchange="calculate_result()"><option value="F">F</option><option value="T">T</option></select><input id="c3p" type="range" min="50" max="100" value="100" oninput="this.nextElementSibling.value = this.value; calculate_result()" onchange="calculate_result()"><output>100</output><label>%</label></label><br>
+        <label>character 4: </label><select id="c4" onchange="calculate_result()"><option value="J">J</option><option value="P">P</option></select><input id="c4p" type="range" min="50" max="100" value="100" oninput="this.nextElementSibling.value = this.value; calculate_result()" onchange="calculate_result()"><output>100</output><label>%</label></label><br>
+        <h2>Step 2: Read the results</h2>
+        <canvas id="drawhere" width="400px" height="400px"></canvas>
+        <textarea disabled="disabled" id="output" style="width: 400px; height: 400px;"></textarea>
+        <script>
+            var initialized = false;
+            var cnvs = document.getElementById("drawhere");
+            var ctx = cnvs.getContext("2d");
+            var c1 = document.getElementById("c1");
+            var c2 = document.getElementById("c2");
+            var c3 = document.getElementById("c3");
+            var c4 = document.getElementById("c4");
+            var c1p = document.getElementById("c1p");
+            var c2p = document.getElementById("c2p");
+            var c3p = document.getElementById("c3p");
+            var c4p = document.getElementById("c4p");
+            var output = document.getElementById("output");
+            function add_i(s2, iy, ix) {
+                var outstr = "";
+                if (s2 == 1) outstr += "S ";
+                else outstr += "N ";
+                if (ix > 0) outstr += "e";
+                else if (ix == 0) outstr += "x";
+                else outstr += "i";
+                drawEllipse(200, -3 + iy * 100, ix * 192 + ix/Math.abs(ix)*15, 20);
+                ctx.fillText(outstr, 200-7 + ix * 192, 10 + iy * 100);
+                return "+" + iy + outstr + "(" + (Math.abs(ix)*100) + "%)" + "\n";
+            }
+            function add_d(s3, dy, dx) {
+                var outstr = "";
+                if (s3 == 1) outstr += "F ";
+                else outstr += "T ";
+                if (dx > 0) outstr += "e";
+                else if (dx == 0) outstr += "x";
+                else outstr += "i";
+                drawEllipse(200, -3 + dy * 100, dx * 192 + dx/Math.abs(dx)*15, 20);
+                ctx.fillText(outstr, 200-7 + dx * 192, 10 + dy * 100);
+                return "+" + dy + outstr + "(" + (Math.abs(dx)*100) + "%)" + "\n";
+            }
+            function add_ri(s2, iy, ix) {
+                var outstr = "";
+                if (s2 == 1) outstr += "N ";
+                else outstr += "S ";
+                if (ix > 0) outstr += "i";
+                else if (ix == 0) outstr += "x";
+                else outstr += "e";
+                drawEllipse(200, -3 + (3 - iy) * 100, -ix * 192 + -ix/Math.abs(ix)*15, 20);
+                ctx.fillText(outstr, 200-7 - ix * 192, 10 + (3 - iy) * 100);
+                return "+" + (3 - iy) + outstr + "(" + (Math.abs(ix)*100) + "%)" + "\n";
+            }
+            function add_rd(s3, dy, dx) {
+                var outstr = "";
+                if (s3 == 1) outstr += "T ";
+                else outstr += "F ";
+                if (dx > 0) outstr += "i";
+                else if (dx == 0) outstr += "x";
+                else outstr += "e";
+                drawEllipse(200, -3 + (3 - dy) * 100, -dx * 192 + -dx/Math.abs(dx)*15, 20);
+                ctx.fillText(outstr, 200-7 - dx * 192, 10 + (3 - dy) * 100);
+                return "+" + (3 - dy) + outstr + "(" + (Math.abs(dx)*100) + "%)" + "\n";
+            }
+            function calculate_result() {
+                if (!initialized) return;
+                var s1 = c1.value == "I"; s1-=0.5; s1*=2;
+                var s2 = c2.value == "S"; s2-=0.5; s2*=2;
+                var s3 = c3.value == "F"; s3-=0.5; s3*=2;
+                var s4 = c4.value == "J"; s4-=0.5; s4*=2;
+                var p1 = c1p.value / 100;
+                var p2 = c2p.value / 100;
+                var p3 = c3p.value / 100;
+                var p4 = c4p.value / 100;
+                var dx, dy, ix, iy;
+                /*
+                [iy]
+                INJ - EP -
+                INP - EJ
+                ISP - ESJ
+                ISJ - ESP
+                (IJ) - (IP)
+                (s/2+1/2)
+                (1*1) - (0*0)
+                (1*0) - (0*1)
+                */
+                iy = 1.5 - 0.75 * (-1/2 + p2)*2 * (2 - Math.abs((p1 - 1/2)*s1 - (p4 - 1/2)*s4));
+                dy = 1.5 - 0.75 * (-1/2 + p3)*2 * (1 + Math.abs((p1 - 1/2)*s1 - (p4 - 1/2)*s4));
+                dx = s4 * (p4 - 1/2)*2 * Math.abs(1.5 - dy)/1.5 * Math.abs(dy - iy)/1.5;
+                ix = - s4 * (p4 - 1/2)*2 * Math.abs(1.5 - iy)/1.5 * Math.abs(dy - iy)/1.5;
+                outstr = "";
+                ctx.clearRect(0, 0, 400, 400);
+                ctx.fillStyle = "#EEE";
+                for (var i = 50; i <= 400-50; i+=50) {
+                    ctx.fillRect(i-0.5, 0, 1, 400);
+                    ctx.fillRect(0, i-0.5, 400, 1);
+                }
+                ctx.fillStyle = "black";
+                if (iy > dy) {
+                    outstr += add_d(s3, dy, dx);
+                    ctx.fillStyle = "#CCC";
+                    outstr += add_d(-s3, dy, -dx * 0.128);
+                    ctx.fillStyle = "black";
+                    outstr += add_i(s2, iy, ix * 0.75);
+                    ctx.fillStyle = "#CCC";
+                    outstr += add_i(-s2, iy, -ix * 0.128 * 0.75);
+                    ctx.fillStyle = "black";
+                    outstr += add_ri(s2, iy, ix * 0.5);
+                    ctx.fillStyle = "#CCC";
+                    outstr += add_ri(-s2, iy, -ix * 0.128 * 0.5);
+                    ctx.fillStyle = "black";
+                    outstr += add_rd(s3, dy, dx * 0.25);
+                    ctx.fillStyle = "#CCC";
+                    outstr += add_rd(-s3, dy, -dx * 0.128 * 0.25);
+                    ctx.fillStyle = "black";
+                } else {
+                    outstr += add_i(s2, iy, ix);
+                    ctx.fillStyle = "#CCC";
+                    outstr += add_i(-s2, iy, -ix * 0.128);
+                    ctx.fillStyle = "black";
+                    outstr += add_d(s3, dy, dx * 0.75);
+                    ctx.fillStyle = "#CCC";
+                    outstr += add_d(-s3, dy, -dx * 0.128 * 0.75);
+                    ctx.fillStyle = "black";
+                    outstr += add_rd(s3, dy, dx * 0.5);
+                    ctx.fillStyle = "#CCC";
+                    outstr += add_rd(-s3, dy, -dx * 0.128 * 0.5);
+                    ctx.fillStyle = "black";
+                    outstr += add_ri(s2, iy, ix * 0.25);
+                    ctx.fillStyle = "#CCC";
+                    outstr += add_ri(-s2, iy, -ix * 0.128 * 0.25);
+                    ctx.fillStyle = "black";
+                }
+                output.innerHTML = outstr;
+                save_values();
+            }
+
+            function drawEllipse(x, y, w, h) {
+                var kappa = .5522848,
+                    ox = (w / 2) * kappa, // control point offset horizontal
+                    oy = (h / 2) * kappa, // control point offset vertical
+                    xe = x + w,           // x-end
+                    ye = y + h,           // y-end
+                    xm = x + w / 2,       // x-middle
+                    ym = y + h / 2;       // y-middle
+
+                ctx.beginPath();
+                ctx.moveTo(x, ym);
+                ctx.bezierCurveTo(x, ym - oy, xm - ox, y, xm, y);
+                ctx.bezierCurveTo(xm + ox, y, xe, ym - oy, xe, ym);
+                ctx.bezierCurveTo(xe, ym + oy, xm + ox, ye, xm, ye);
+                ctx.bezierCurveTo(xm - ox, ye, x, ym + oy, x, ym);
+                //ctx.closePath(); // not used correctly, see comments (use to close off open path)
+                ctx.stroke();
+            }
+
+            function save_values() {
+                ["", "p"].forEach(j => {
+                for (var i = 1; i <= 4; i++) {
+                        localStorage.setItem("c" + i + j, window["c" + i + j].value);
+                    }
+                })
+            }
+            function restore_values() {
+                ["", "p"].forEach(j => {
+                for (var i = 1; i <= 4; i++) {
+                        if (localStorage.getItem("c" + i + j) != null) {
+                            window["c" + i + j].value = localStorage.getItem("c" + i + j);
+                            window["c" + i + j].dispatchEvent(new Event("input"));
+                        }
+                    }
+                })
+            }
+            window.addEventListener("load", function() {
+                restore_values();
+                initialized = true;
+                calculate_result();
+            });
+        </script>
+    </body>
+</html>
